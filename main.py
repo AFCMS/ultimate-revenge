@@ -1,3 +1,4 @@
+import argparse
 import atexit
 import pathlib
 import subprocess
@@ -11,6 +12,18 @@ def setup_sound(volume_percent: int = 100):
 
 def play_video(video_path: pathlib.Path):
     subprocess.run(["ffplay", "-fs", str(video_path.absolute())])
+
+
+def record_webcam(webcam: str, output_path: pathlib.Path, duration: int) -> subprocess.Popen:
+    """
+    :param webcam: /dev/video1 or similar
+    :param output_path:
+    :param duration:
+    """
+    return subprocess.Popen(
+        ["ffmpeg", "-f", "pulse", "-ac", "2", "-i", "default", "-f", "v4l2", "-i", webcam, "-t",
+         format_seconds(duration),
+         "-vcodec", "libx264", output_path.absolute()])
 
 
 def format_seconds(seconds: int):
@@ -32,7 +45,7 @@ def set_desktop_animation(enable: bool):
 def get_record_path(pr: pathlib.Path) -> pathlib.Path:
     pr.mkdir(exist_ok=True)
     other_recordings = list(path_recordings.glob("record_*.mp4"))
-    other_recordings.sort()
+    other_recordings.sort(key=lambda p: int(p.stem.split("_")[1]))
     if other_recordings:
         last_recording = other_recordings[-1]
         last_recording_number = int(last_recording.stem.split("_")[1])
@@ -46,8 +59,43 @@ path = pathlib.Path(".")
 path_run_once = path / "run_once"
 path_recordings = path / "recordings"
 
-# Press the green button in the gutter to run the script.
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "webcam",
+        type=lambda p: pathlib.Path(p).absolute(),
+        help="Path to the webcam video source"
+    )
+
+    parser.add_argument(
+        "video",
+        type=lambda p: pathlib.Path(p).absolute(),
+        help="Path to the jumpscare video"
+    )
+
+    parser.add_argument(
+        "--muted",
+        action="store_true",
+        help="Whether to mute the video sound"
+    )
+
+    parser.add_argument(
+        "--volume",
+        type=int,
+        default=100,
+        help="Volume level (0-100)"
+    )
+
+    parser.add_argument(
+        "--record-duration",
+        type=int,
+        default=15,
+        help="Duration of the webcam recording in seconds"
+    )
+
+    args = parser.parse_args()
+
     if path_run_once.exists():
         print("Already running")
         exit(1)
@@ -56,20 +104,16 @@ if __name__ == "__main__":
 
     path_record = get_record_path(path_recordings)
 
-    record_process = subprocess.Popen(
-        ["ffmpeg", "-f", "pulse", "-ac", "2", "-i", "default", "-f", "v4l2", "-i", "/dev/video1", "-t",
-         format_seconds(10),
-         "-vcodec", "libx264", path_record.absolute()])
+    record_process = record_webcam(str(args.webcam), path_record, args.record_duration)
 
     time.sleep(3)
 
-    setup_sound(5)
+    setup_sound(0 if args.muted else args.volume)
     set_desktop_animation(False)
 
     time.sleep(0.5)
 
-    # play_video(pathlib.Path("/home/afcm/Téléchargements/Jeff_The_Killer_Jumpscare.mp4"))
-    play_video(pathlib.Path("/home/afcm/Téléchargements/STORROR_BEST_OF_PARKOUR.mp4"))
+    play_video(args.video)
 
     record_process.wait()
 
