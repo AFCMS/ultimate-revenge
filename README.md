@@ -1,4 +1,4 @@
-# Ultimate Jumpscare
+# Ultimate Revenge
 
 Forgot to lock your computer? Then you notice your friend's wanting to ruin it? Remotly jumpscare them! And best of all,
 record their reaction!
