@@ -8,7 +8,7 @@ after disabling desktop animations, while recording the webcam.
 
 This software has been tested on Fedora Workstation and require the following:
 
-- [GNOME Desktop Environment](https://www.gnome.org)
+- [GNOME Desktop Environment](https://www.gnome.org) with Wayland session
 - [PipeWire](https://pipewire.org) as audio server
 - [FFPLAY/FFMPEG](https://www.ffmpeg.org) installed (required for playing the video and recording webcam)
 
@@ -17,6 +17,8 @@ In my case I conveniently use GSConnect + KDE Connect from my phone:
 
 - [GSConnect](https://extensions.gnome.org/extension/1319/gsconnect)
 - [KDE Connect](https://kdeconnect.kde.org)
+
+Another solution is to use `ssh` to remotely run the script (via Tailscale for easy access via phone).
 
 I recommend you this very effective jumpscare (beware if you are subject to epilepsy): https://youtu.be/ToRqXvEfSCQ
 
@@ -42,4 +44,10 @@ main.sh /dev/video1 /path/to/video.mp4
 
 See `--help` for more options.
 
-Now you can setup a command in GSConnect for exemple to run the script. 
+You can setup a command in GSConnect for exemple to run the script.
+
+Alternatively you can use `ssh`:
+
+```bash
+WAYLAND_DISPLAY=wayland-0 main.sh /dev/video1 /path/to/video.mp4
+```
